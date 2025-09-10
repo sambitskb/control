@@ -1,0 +1,203 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorensen XPF60-20DP Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .channel {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .channel h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .connect-btn {
+            background-color: #4CAF50;
+            color: white;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .set-btn {
+            background-color: #2196F3;
+            color: white;
+            width: 100%;
+        }
+        .reset-btn {
+            background-color: #FF5722;
+            color: white;
+            width: 100%;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .readings {
+            margin: 10px 0;
+        }
+        .reading {
+            background-color: #e9ecef;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .reset-section {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            text-align: center;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sorensen XPF60-20DP Control Panel</h1>
+        
+        <div class="status {% if connected %}connected{% else %}disconnected{% endif %}">
+            Status: {% if connected %}Connected{% else %}Disconnected{% endif %}
+        </div>
+
+        <form action="/connect" method="post" style="margin-bottom: 20px;">
+            <button type="submit" class="connect-btn">Connect to PSU</button>
+        </form>
+
+        <div class="controls">
+            <div class="channel">
+                <h3>Channel 1</h3>
+                <form action="/set_voltage" method="post">
+                    <input type="hidden" name="channel" value="1">
+                    <select name="model" required>
+                        <option value="DI-8110">DI-8110</option>
+                        <option value="DI-8111">DI-8111</option>
+                        <option value="DI-8112">DI-8112</option>
+                        <option value="DI-8113">DI-8113</option>
+                    </select>
+                    <button type="submit" class="set-btn">Set V1</button>
+                </form>
+                <div class="readings">
+                    <div class="reading">V1: {{ v1_voltage }}V</div>
+                    <div class="reading">I1: {{ v1_current }}A</div>
+                </div>
+            </div>
+
+            <div class="channel">
+                <h3>Channel 2</h3>
+                <form action="/set_voltage" method="post">
+                    <input type="hidden" name="channel" value="2">
+                    <select name="model" required>
+                        <option value="DI-8110">DI-8110</option>
+                        <option value="DI-8111">DI-8111</option>
+                        <option value="DI-8112">DI-8112</option>
+                        <option value="DI-8113">DI-8113</option>
+                    </select>
+                    <button type="submit" class="set-btn">Set V2</button>
+                </form>
+                <div class="readings">
+                    <div class="reading">V2: {{ v2_voltage }}V</div>
+                    <div class="reading">I2: {{ v2_current }}A</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="reset-section">
+            <h3>Reset Control</h3>
+            <form action="/reset" method="post">
+                <select name="reset_option" required>
+                    <option value="V1 CONTROL">V1 CONTROL</option>
+                    <option value="V2 CONTROL">V2 CONTROL</option>
+                    <option value="BOTH CONTROL">BOTH CONTROL</option>
+                </select>
+                <button type="submit" class="reset-btn">Reset PSU</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Handle connect button with AJAX for better UX
+        document.querySelector('form[action="/connect"]').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                location.reload(); // Refresh to show updated connection status
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
